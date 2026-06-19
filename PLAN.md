@@ -132,8 +132,16 @@ by Layer A and Layer B (built once, in WS2).
       regime IDM robustly rescues the intervention/dynamics signal.
   * M3 PLANNING — gLV latent-MPPI, GPU job 74718, 3 seeds, 12 ep/seed: HONEST NEGATIVE. 0% success for
     ALL methods (random/greedy/final_only/mppi) at tol=0.15*attr_scale; MPPI does NOT beat baselines
-    (final dist 4.88 vs random 4.58 / greedy 4.51; start 6.64). Reported as-is; likely latent-vs-state
-    geometry mismatch and/or weak bounded actions. Headline (M4) stands independently.
+    (final dist 4.88 vs random 4.58 / greedy 4.51; start 6.64). Headline (M4) stands independently.
+  * M3 DIAGNOSIS (diagnose_planning.py, CPU, local): (1) ORACLE on TRUE dynamics 0% (final 4.09), STILL
+    0%/~4.0 with 4x actions + 3x horizon -> TASK-SPEC/controllability (K=6 panel can't steer 24 species
+    into the target basin); (2) latent-vs-true distance Pearson/Spearman -0.19 (poor proxy, secondary);
+    (3) model rollout latent divergence ~1.2% over 20 steps (faithful -> NOT the cause). DIAGNOSED neg.
+  * M2 REAL-DATA infant-env probe — GPU job 74841, frozen corpus-pretrained encoder (30ep two-view
+    VICReg, no collapse feat_std 0.81->0.94), linear probe vs Susagi MLP on the TRUE abundance matrix
+    (same CV, 2036 samples, 12 classes): OUR JEPA acc 0.508+/-0.007 / AUC 0.896+/-0.003 vs Susagi-port
+    acc 0.527 / AUC 0.890 (Susagi reported 0.549/0.912). COMPETITIVE (AUC tie, ~2pp below acc), not a
+    decisive win. Tech-invariance N/A (infants single-tech MiSeq). Code on m2-realdata, merged to bnz.
 - UNVERIFIED: WS1 real-data loader path (the 22GB corpus is cluster-only; verify on cluster before M2).
   Susagi baseline numbers (infants/IBS) quoted from their result files — re-verify provenance in WS4
   before claiming "beat the baseline".

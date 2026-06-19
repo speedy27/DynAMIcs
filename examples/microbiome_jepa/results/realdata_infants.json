@@ -1,0 +1,27 @@
+{
+  "task": "infants_env",
+  "pretrained_encoder": true,
+  "n_samples": 2036,
+  "n_classes": 12,
+  "n_max": 256,
+  "d_model": 128,
+  "jepa_linear_probe": {
+    "acc_mean": 0.5078624078624079,
+    "acc_se": 0.006945107629043034,
+    "auc_mean": 0.8959947797452106,
+    "auc_se": 0.0028084569355809204
+  },
+  "susagi_mlp_baseline": {
+    "acc_mean": 0.5270222093751505,
+    "acc_se": 0.010221504254452937,
+    "auc_mean": 0.8897924799192609,
+    "auc_se": 0.0020255565452629836
+  },
+  "susagi_reported": {
+    "acc": 0.549,
+    "macro_auc": 0.912,
+    "source": "Susagi env_predictions.txt (reference)"
+  },
+  "zscore_note": "z-score fit on infant tokens (corpus z-score not persisted) \u2014 approximation",
+  "tech_invariance": "N/A on infants (Instrument = 100% Illumina MiSeq, single class)"
+}
