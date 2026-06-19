@@ -85,28 +85,33 @@ the error bars.)
   Python loop of small kernels); shrinking the model + dropping a per-step diagnostic encode mattered
   more than raw GPU FLOPs.
 
-## Layer A downstream on REAL data — MEASURED (job 74841; infant-environment; 2036 samples, 12 classes)
+## Layer A downstream on REAL data — MEASURED (job 74841 pretrain; job 74984 fair eval; infant-environment; 2036 samples, 12 classes)
 Layer-A set-JEPA pretrained on 20k real MicrobeAtlas communities (two-view VICReg, 30 epochs, **no
-collapse**: feat_std 0.81→0.94), frozen, then a **linear** probe of the community embedding on the
-infant birth-mode×age task (StratifiedKFold-5, accuracy + macro OVR ROC-AUC), vs a Susagi-style MLP on
-the **true abundance matrix** (`abundance.csv`, same CV — a fair apples-to-apples baseline, not a
-surrogate). `realdata.py`.
+collapse**: feat_std 0.81→0.94), then **frozen**. We probe the community embedding on the infant
+birth-mode×age task (StratifiedKFold-5, accuracy + macro OVR ROC-AUC) with TWO probes on the SAME frozen
+embeddings — a **linear** probe (the hardest SSL test; a representation-quality claim) and an **MLP**
+probe matching the baseline's classifier class (apples-to-apples) — vs a Susagi-style MLP on the **true
+abundance matrix** (`abundance.csv`, same CV). Tokens are z-scored with **corpus** statistics (consistent
+with pretraining), not infant-only. `realdata.py`.
 
 | infant-env (12-class)                          | accuracy        | macro ROC-AUC   |
 |------------------------------------------------|-----------------|-----------------|
-| **OUR frozen JEPA + linear probe**             | 0.508 ± 0.007   | **0.896 ± 0.003** |
+| **OUR frozen JEPA + linear probe**             | 0.509 ± 0.014   | **0.896 ± 0.001** |
+| OUR frozen JEPA + MLP probe (apples-to-apples) | 0.500 ± 0.008   | 0.888 ± 0.002   |
 | Susagi MLP on the true abundance matrix (port) | 0.527 ± 0.010   | 0.890 ± 0.002   |
 | Susagi reported (reference)                    | 0.549           | 0.912           |
 
-Honest read: a **frozen** self-supervised encoder + **linear** probe is **competitive** with a
-task-supervised MLP on the raw abundance matrix — it **matches macro-AUC** (0.896 vs 0.890, +0.006) and
-is ~2pp below on accuracy (0.508 vs 0.527), and sits a little under Susagi's reported numbers. We do
-**not** claim a decisive win (mixed: AUC marginally up, accuracy down). That a label-free linear probe
-ties a supervised MLP on AUC is a reasonable result for the encoder. Caveats: 30-epoch pretraining
-(light); z-score fit on infant tokens, not the corpus (approximation); a linear (not fine-tuned) probe
-is a hard test. **Sequencing-tech-invariance is N/A on infants** (Instrument = 100% Illumina MiSeq,
-single class) — it needs a multi-tech set; the probe (`probe_downstream.tech_invariance`) is built and
-applies to any rep, but no infant tech number is reportable.
+Honest read: a **frozen** self-supervised encoder is **competitive** with a task-supervised MLP on the
+raw abundance matrix. Our best probe (linear) **matches macro-AUC** (0.896 vs 0.890) and is ~2pp below on
+accuracy (0.509 vs 0.527). Notably the **MLP probe does NOT beat the linear probe** (0.500/0.888 vs
+0.509/0.896): the representation is already linearly separable, so the extra classifier capacity does not
+help (it slightly overfits the 2036-sample task) — this *supports* the representation-quality claim
+rather than indicating a self-handicap. The **corpus z-score** changed the numbers negligibly (linear
+0.509 vs the infant-z-score 0.508), removing that caveat honestly. We do **not** claim a decisive win
+(AUC tie, accuracy ~2pp below). Caveats: 30-epoch pretraining (light — a longer/bigger 100-epoch run is
+in progress, `run_realdata_big.sh`); a frozen linear probe is a deliberately hard test. **Tech-invariance
+is N/A on infants** (Instrument = 100% Illumina MiSeq); it is measured separately on a multi-tech corpus
+subset (see "Sequencing-tech invariance" below).
 
 ## Planning (Layer B application) — MEASURED, honest NEGATIVE (job 74718; 3 seeds; 12 episodes/seed)
 We plan interventions to drive a community to a target attractor via latent-space MPPI (roll the GRU
