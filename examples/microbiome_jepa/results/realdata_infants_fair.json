@@ -1,0 +1,33 @@
+{
+  "task": "infants_env",
+  "pretrained_encoder": true,
+  "n_samples": 2036,
+  "n_classes": 12,
+  "n_max": 256,
+  "d_model": 128,
+  "jepa_linear_probe": {
+    "acc_mean": 0.5088391867803632,
+    "acc_se": 0.0136708045757311,
+    "auc_mean": 0.8960669195249371,
+    "auc_se": 0.0014807038575726592
+  },
+  "jepa_mlp_probe": {
+    "acc_mean": 0.49951823481235247,
+    "acc_se": 0.008231772764366574,
+    "auc_mean": 0.8883748277086536,
+    "auc_se": 0.0016188440022303777
+  },
+  "susagi_mlp_baseline": {
+    "acc_mean": 0.5270222093751505,
+    "acc_se": 0.010221504254452937,
+    "auc_mean": 0.8897924799192609,
+    "auc_se": 0.0020255565452629836
+  },
+  "susagi_reported": {
+    "acc": 0.549,
+    "macro_auc": 0.912,
+    "source": "Susagi env_predictions.txt (reference)"
+  },
+  "zscore_source": "corpus_5000_samples",
+  "tech_invariance": "N/A on infants (Instrument = 100% Illumina MiSeq, single class)"
+}

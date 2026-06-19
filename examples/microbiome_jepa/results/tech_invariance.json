@@ -1,0 +1,95 @@
+{
+  "n_samples": 4960,
+  "per_class_cap": 2500,
+  "strategy_counts": {
+    "amplicon": 2461,
+    "wgs": 2499
+  },
+  "n_with_biome": 4062,
+  "biome_counts": {
+    "feces": 313,
+    "gut": 2163,
+    "oral": 10,
+    "plant": 141,
+    "skin": 151,
+    "soil": 374,
+    "stool": 1,
+    "water": 909
+  },
+  "tech_probe": {
+    "jepa_pretrained": {
+      "acc_mean": 0.9524193548387097,
+      "acc_se": 0.0022405353599690273,
+      "balanced_acc_mean": 0.9524291199262258,
+      "balanced_acc_se": 0.0022310646168908783,
+      "chance": 0.5038306451612903,
+      "n": 4960,
+      "n_classes": 2
+    },
+    "random_encoder": {
+      "acc_mean": 0.896774193548387,
+      "acc_se": 0.0014112903225806477,
+      "balanced_acc_mean": 0.896899370964426,
+      "balanced_acc_se": 0.0013938798215780911,
+      "chance": 0.5038306451612903,
+      "n": 4960,
+      "n_classes": 2
+    },
+    "raw_meanpool": {
+      "acc_mean": 0.9379032258064516,
+      "acc_se": 0.004944656640496264,
+      "balanced_acc_mean": 0.9380121152544374,
+      "balanced_acc_se": 0.0049277268823316065,
+      "chance": 0.5038306451612903,
+      "n": 4960,
+      "n_classes": 2
+    },
+    "susagi_imposter": {
+      "acc_mean": 0.8913306451612903,
+      "acc_se": 0.002963092430786099,
+      "balanced_acc_mean": 0.8913904853854216,
+      "balanced_acc_se": 0.002973818900035744,
+      "chance": 0.5038306451612903,
+      "n": 4960,
+      "n_classes": 2
+    }
+  },
+  "biome_probe": {
+    "jepa_pretrained": {
+      "acc_mean": 0.8643550918267803,
+      "acc_se": 0.0033995522616311518,
+      "balanced_acc_mean": 0.8050112727543036,
+      "balanced_acc_se": 0.03202941413495098,
+      "chance": 0.5324963072378139,
+      "n": 4062,
+      "n_classes": 8
+    },
+    "random_encoder": {
+      "acc_mean": 0.8355482643496386,
+      "acc_se": 0.0056542634183144895,
+      "balanced_acc_mean": 0.741043053792634,
+      "balanced_acc_se": 0.036447164309001204,
+      "chance": 0.5324963072378139,
+      "n": 4062,
+      "n_classes": 8
+    },
+    "raw_meanpool": {
+      "acc_mean": 0.8601697174607214,
+      "acc_se": 0.006483497030432842,
+      "balanced_acc_mean": 0.7937392661216569,
+      "balanced_acc_se": 0.023639362681230625,
+      "chance": 0.5324963072378139,
+      "n": 4062,
+      "n_classes": 8
+    },
+    "susagi_imposter": {
+      "acc_mean": 0.8421951781094166,
+      "acc_se": 0.00444960977914043,
+      "balanced_acc_mean": 0.7191905283903053,
+      "balanced_acc_se": 0.021550739369108632,
+      "chance": 0.5324963072378139,
+      "n": 4062,
+      "n_classes": 8
+    }
+  }
+}

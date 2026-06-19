@@ -126,17 +126,20 @@ linear probe to recover the tech from each rep (**LOWER acc = more invariant = b
 
 | rep (chance: tech 0.50, biome 0.53)  | TECH acc ↓ better | BIOME acc ↑ better |
 |--------------------------------------|-------------------|--------------------|
-| **OUR frozen JEPA**                  | 0.952             | 0.864              |
+| **OUR frozen JEPA**                  | 0.952             | **0.864**          |
 | raw mean-pool (input)                | 0.938             | 0.860              |
+| **Susagi imposter rep** (port)       | **0.891**         | 0.842              |
 | random-init encoder                  | 0.897             | 0.836              |
 
-Honest read: our JEPA is **NOT tech-invariant** — it encodes amplicon-vs-WGS *slightly MORE* than the raw
-input (0.952 vs 0.938) and well above a random encoder, while also best preserving biology (0.864). The
-two-view VICReg objective with composition-preserving augmentations (OTU subsample / abundance jitter /
-dropout) yields a FAITHFUL community representation that captures both biology AND the protocol
-signature — nothing in the objective removes the technical axis. A clean negative: tech-invariance would
-require tech-spanning augmentations or an explicit domain-adversarial / invariance term. *(Comparison vs
-the Susagi imposter rep — the named baseline — pending job 75032.)*
+Honest read: our JEPA is **NOT tech-invariant** — it encodes amplicon-vs-WGS the MOST of any rep (0.952),
+above the raw input (0.938), and **even the Susagi imposter rep is more tech-invariant than ours**
+(0.891 ≈ the random encoder). The Susagi model (identity-only OTU embeddings, trained to judge whether an
+OTU *belongs*) retains less of the protocol signal; our two-view VICReg objective with
+composition-preserving augmentations (OTU subsample / abundance jitter / dropout) instead yields a
+FAITHFUL community representation that captures both biology AND the protocol signature. The flip side
+(the only place we lead): our JEPA **best preserves biology** (biome 0.864, highest). This is an honest
+*loss* on the tech-invariance metric specifically — achieving invariance would need tech-spanning
+augmentations or an explicit domain-adversarial / invariance term, which the current recipe lacks.
 
 ## Planning (Layer B application) — MEASURED: a fully DIAGNOSED, partially-closed negative
 The headline (IDM ablation) stands independently of planning. We nonetheless pursued the headline
