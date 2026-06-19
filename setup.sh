@@ -46,7 +46,7 @@ Go there and work from it:
     cd $TARGET
 
 Then it is fully set up — \`source env.sh\` (already added to ~/.bashrc) and, to verify,
-\`sbatch slurm_test.sh\`.
+\`sbatch --reservation=Vivatech slurm_test.sh\`.
 EOF
     echo ">>> Original clone cleaned — only a pointer README.md remains at $EBJEPA_ORIG_CLONE"
 fi
