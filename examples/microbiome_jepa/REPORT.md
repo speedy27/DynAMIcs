@@ -1,8 +1,12 @@
 # EB-JEPA for the Microbiome: an action-conditioned world model with intervention planning
 
-**Status:** the IDM-ablation headline and the planning result are MEASURED and final (jobs 74610,
-74718); the real-data Layer A probe is running. Every number is labelled MEASURED / PENDING — no
-fabricated values, and the reversing seed is kept in the figures.
+**Status:** the IDM-ablation headline (job 74610) is MEASURED and final. The planning application is a
+fully DIAGNOSED, partially-closed negative (controllability → representation → readout-fidelity chain;
+jobs 74718/74933/74966 + CPU diagnostics). The real-data Layer A probe is MEASURED with a fair linear+MLP
+comparison and corpus z-score (job 74984). Sequencing-tech invariance is a MEASURED honest negative (job
+74996). A higher-capacity planning model and a longer real-data pretraining are still running. Every
+number is labelled MEASURED / PENDING — no fabricated values, and the reversing seed is kept in the
+figures.
 
 ## Thesis (what is new)
 Static masked-set JEPAs for omics already exist (GeneJepa, Cell-JEPA, JEPA-DNA) — so we do **not**
