@@ -290,6 +290,7 @@ def run_benchmark(
     ckpt: str | None = None,
     device: str = "cpu",
     out: str | None = None,
+    fig_dir: str | None = None,
     verbose: bool = True,
 ) -> dict:
     from eb_jepa.datasets.microbiome.glv import GLVConfig, GLVSimulator
@@ -378,7 +379,113 @@ def run_benchmark(
                                   "horizons": horizons, "seeds": seeds}}, f, indent=2)
         print(f"\nResults saved to {out}")
 
+    if fig_dir is not None:
+        print(f"\nGenerating figures → {fig_dir}/")
+        save_figures(summary, horizons, n_subjects, seeds, out_dir=fig_dir)
+
     return summary
+
+
+def save_figures(summary: dict, horizons: list[int], n_subjects: int,
+                 seeds: list[int], out_dir: str = "artifacts/figures") -> None:
+    """Generate two publication-quality figures from benchmark summary."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mticker
+    from pathlib import Path
+
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    models = list(summary.keys())
+    colors = {"persistence": "#aaaaaa", "gLV-L2": "#2196F3", "gLV-net": "#FF9800", "JEPA": "#E91E63"}
+    markers = {"persistence": "s", "gLV-L2": "o", "gLV-net": "^", "JEPA": "D"}
+    labels = {"persistence": "Persistence (no-change)", "gLV-L2": "gLV-L2 (Ridge, linear)",
+              "gLV-net": "gLV-net (MLP, nonlinear)", "JEPA": "JEPA (our method)"}
+
+    # ── Figure 1: CLR-RMSE vs horizon (line plot, error bars = within-fold std) ──
+    fig, ax = plt.subplots(figsize=(6, 4))
+    for name in models:
+        xs = horizons
+        ys = [summary[name][h]["mean"] for h in horizons]
+        es = [summary[name][h]["std"] for h in horizons]
+        c = colors.get(name, "#555555")
+        m = markers.get(name, "o")
+        lbl = labels.get(name, name)
+        ax.errorbar(xs, ys, yerr=es, label=lbl, color=c, marker=m,
+                    linewidth=2, markersize=7, capsize=4)
+
+    ax.axhline(summary["persistence"][horizons[0]]["mean"], color="#aaaaaa",
+               linestyle=":", linewidth=1, alpha=0.6)
+    ax.set_xlabel("Prediction horizon (steps)", fontsize=12)
+    ax.set_ylabel("CLR-RMSE ↓", fontsize=12)
+    ax.set_title(f"Temporal benchmark — MDSINE2 protocol\n"
+                 f"({n_subjects} gLV subjects, HOSO CV, {len(seeds)} seed(s))", fontsize=11)
+    ax.set_xticks(horizons)
+    ax.legend(fontsize=10, framealpha=0.9)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    p1 = f"{out_dir}/temporal_benchmark_rmse.png"
+    fig.savefig(p1, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  → {p1}")
+
+    # ── Figure 2: Skill vs persistence (ratio: persistence_RMSE / model_RMSE) ──
+    fig, ax = plt.subplots(figsize=(6, 4))
+    pers_means = [summary["persistence"][h]["mean"] for h in horizons]
+    for name in models:
+        if name == "persistence":
+            continue
+        skills = [pers_means[i] / max(summary[name][h]["mean"], 1e-9)
+                  for i, h in enumerate(horizons)]
+        c = colors.get(name, "#555555")
+        m = markers.get(name, "o")
+        lbl = labels.get(name, name)
+        ax.plot(horizons, skills, label=lbl, color=c, marker=m, linewidth=2, markersize=7)
+
+    ax.axhline(1.0, color="#aaaaaa", linestyle="--", linewidth=1.5, label="Persistence (skill=1)")
+    ax.set_xlabel("Prediction horizon (steps)", fontsize=12)
+    ax.set_ylabel("Skill vs persistence ↑  (>1 = beats no-change)", fontsize=11)
+    ax.set_title(f"Temporal skill — MDSINE2 protocol\n"
+                 f"({n_subjects} gLV subjects, HOSO CV, {len(seeds)} seed(s))", fontsize=11)
+    ax.set_xticks(horizons)
+    ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.2f"))
+    ax.legend(fontsize=10, framealpha=0.9)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    p2 = f"{out_dir}/temporal_benchmark_skill.png"
+    fig.savefig(p2, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  → {p2}")
+
+    # ── Figure 3: Bar chart at each horizon (grouped bars, cleaner for slides) ──
+    fig, axes = plt.subplots(1, len(horizons), figsize=(3 * len(horizons), 4), sharey=False)
+    if len(horizons) == 1:
+        axes = [axes]
+    for ax, h in zip(axes, horizons):
+        names_plot = models
+        vals = [summary[n][h]["mean"] for n in names_plot]
+        errs = [summary[n][h]["std"]  for n in names_plot]
+        bar_colors = [colors.get(n, "#888888") for n in names_plot]
+        bars = ax.bar(range(len(names_plot)), vals, yerr=errs, color=bar_colors,
+                      capsize=5, width=0.6, alpha=0.85)
+        ax.set_xticks(range(len(names_plot)))
+        ax.set_xticklabels([labels.get(n, n).split(" ")[0] for n in names_plot],
+                           rotation=30, ha="right", fontsize=9)
+        ax.set_title(f"h = {h}", fontsize=11)
+        ax.set_ylabel("CLR-RMSE ↓" if ax == axes[0] else "", fontsize=10)
+        ax.grid(True, axis="y", alpha=0.3)
+        # annotate best (lowest RMSE)
+        best_i = int(min(range(len(vals)), key=lambda i: vals[i]))
+        ax.bar(best_i, vals[best_i], yerr=errs[best_i],
+               color=bar_colors[best_i], capsize=5, width=0.6, alpha=1.0,
+               edgecolor="black", linewidth=1.5)
+    fig.suptitle(f"CLR-RMSE per horizon — MDSINE2 protocol ({n_subjects} subjects, HOSO)",
+                 fontsize=11, y=1.02)
+    fig.tight_layout()
+    p3 = f"{out_dir}/temporal_benchmark_bars.png"
+    fig.savefig(p3, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  → {p3}")
 
 
 def _print_table(results: dict, horizons: list[int], n_subjects: int,
@@ -450,6 +557,8 @@ def main():
                    help="Torch device for JEPA inference (default cpu)")
     p.add_argument("--out", type=str, default=None,
                    help="Save results JSON to this path")
+    p.add_argument("--figs", type=str, default=None,
+                   help="Directory to save figures (PNG)")
     args = p.parse_args()
 
     run_benchmark(
@@ -461,6 +570,7 @@ def main():
         ckpt=args.ckpt,
         device=args.device,
         out=args.out,
+        fig_dir=args.figs,
     )
 
 
