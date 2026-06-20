@@ -23,7 +23,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from omegaconf import OmegaConf
 
-from eb_jepa.architectures import RNNPredictor
+from eb_jepa.architectures import RNNPredictor, SetTransformer
 from eb_jepa.jepa import JEPA
 from eb_jepa.losses import (
     SquareLossSeq, PathwayCoherenceLoss, PerturbationSignatureLoss,
@@ -36,6 +36,32 @@ class FrozenIdentityEncoder(nn.Module):
     """The state IS the frozen MosaicFM embedding -> identity, no trainable params."""
     def forward(self, x):
         return x
+
+
+def load_grounded_encoder(path, device):
+    """Rebuild the grounded SetTransformer (step 1) and return a FROZEN encode_fn:
+    raw genes [N, K] -> latent z [N, Dz]. Uses the EMA `target` weights (the
+    probe-quality encoder). This is the 2-step "E3" regime: encoder f_θ frozen,
+    only the world-model predictor g_φ is trained on top of its latents.
+    """
+    ck = torch.load(path, map_location="cpu", weights_only=False)
+    K, Dz, m = ck["n_genes"], ck["out_d"], ck["cfg"]["model"]
+    enc = SetTransformer(n_genes=K, out_d=Dz, d_model=m.get("d_model", 192),
+                         n_latents=m.get("n_latents", 32), depth=m.get("depth", 2),
+                         heads=m.get("heads", 4))
+    for name, dim in (ck.get("source_dims") or {}).items():
+        enc.register_gene_source(name, torch.zeros(K, dim))   # shape only; weights from state_dict
+    enc.load_state_dict(ck["target"])
+    enc.eval().to(device)
+    for p in enc.parameters():
+        p.requires_grad_(False)
+
+    @torch.no_grad()
+    def encode_fn(Xg, bs=4096):
+        outs = [enc(Xg[i:i + bs].to(device)).cpu() for i in range(0, len(Xg), bs)]
+        return torch.cat(outs)
+
+    return encode_fn, K, Dz
 
 
 class NoReg(nn.Module):
@@ -91,11 +117,22 @@ def run(fname, overrides):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(cfg.meta.seed); np.random.seed(cfg.meta.seed)
 
+    # encoder f_θ: frozen grounded SetTransformer on RAW GENES (E3, 2-step), or identity
+    # over precomputed MosaicFM embeddings (E1, default). Either way f_θ is frozen.
+    enc_kind = cfg.model.get("encoder", "identity") if "model" in cfg else "identity"
+    encode_fn = None
+    if enc_kind == "settransformer":
+        gpath = cfg.model.get("ground_ckpt", "")
+        assert gpath and os.path.exists(gpath), \
+            f"model.encoder=settransformer needs model.ground_ckpt (got '{gpath}'); run ground.py first"
+        encode_fn, gK, gDz = load_grounded_encoder(gpath, device)
+        print(f"  E3: frozen grounded SetTransformer, genes K={gK} -> z={gDz} (cache must be raw genes)")
+
     dcfg = PertConfig(cache_path=cfg.data.cache_path, val_fraction=cfg.data.val_fraction, seed=cfg.meta.seed)
     tr, va, train_loader, val_loader = make_loaders(dcfg, batch_size=cfg.data.batch_size,
-                                                    num_workers=cfg.data.num_workers)
+                                                    num_workers=cfg.data.num_workers, encode_fn=encode_fn)
     D, A = tr.D, tr.action_dim
-    print(f"== tahoe-perturb EB-JEPA | device={device} | D={D} action_dim={A} | "
+    print(f"== tahoe-perturb EB-JEPA | device={device} | encoder={enc_kind} D={D} action_dim={A} | "
           f"train={len(tr)} val={len(va)} | control={'DMSO' if tr.has_ctrl else 'centroid'} ==")
 
     encoder = FrozenIdentityEncoder()

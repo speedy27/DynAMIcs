@@ -173,8 +173,12 @@ def run(fname, overrides):
             if r: print(f"  {tname:10s} {feat:12s} F1={r['macro_f1']:.3f} acc={r['acc']:.3f}")
 
     ckpt = os.environ.get("EBJEPA_CKPTS", "checkpoints/tahoe"); os.makedirs(ckpt, exist_ok=True)
+    # source_dims lets perturb.py rebuild the exact encoder (re-register frozen sources
+    # with matching shapes) before load_state_dict, so the grounded encoder reloads cleanly.
+    source_dims = {nm: m.in_features for nm, m in online.src_proj.items()}
     torch.save({"target": target.state_dict(), "online": online.state_dict(),
-                "cfg": OmegaConf.to_container(cfg)}, os.path.join(ckpt, "tahoe_ground.pt"))
+                "cfg": OmegaConf.to_container(cfg), "n_genes": K, "out_d": D,
+                "source_dims": source_dims}, os.path.join(ckpt, "tahoe_ground.pt"))
     print(f"saved -> {os.path.join(ckpt, 'tahoe_ground.pt')}")
 
 

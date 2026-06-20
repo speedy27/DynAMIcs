@@ -233,10 +233,17 @@ On évalue **deux choses séparément** :
 | `examples/tahoe/_smoke_ground.py`, `_smoke_perturb.py` | smoke tests synthétiques (passent : `SMOKE OK`) |
 
 ### 10.7 TODO 2-step
-- [ ] **Re-precompute** un cache de perturbation avec **gènes bruts** (paires ctrl/pert) pour brancher E2/E3.
-- [ ] Charger `tahoe_ground.pt` (encodeur étape 1) **gelé** dans `perturb.py` (E3).
+- [x] **Charger `tahoe_ground.pt` gelé dans `perturb.py` (E3) — FAIT.** `model.encoder=settransformer`
+      + `model.ground_ckpt=<tahoe_ground.pt>` : `load_grounded_encoder` reconstruit le SetTransformer
+      (re-register des sources gelées via `source_dims` sauvé par `ground.py`), charge l'EMA `target`,
+      **gèle**, et **pré-encode** les gènes bruts → z ; le world-model (GRU + JEPA.unroll + signature +
+      pathway + OT) tourne ensuite en z-space, inchangé. `encoder=identity` (MosaicFM, E1) reste le défaut.
+      Validé sans download : `make smoke_perturb_e3`. Pathway calculé en **espace-gène** avant encodage.
+- [ ] **Re-precompute** un cache de perturbation avec **gènes bruts** (même panel que `ground`) — c'est le
+      seul prérequis data restant pour lancer E3 sur Dalia (le câblage code est prêt). `precompute_pert.py`
+      lit aujourd'hui des embeddings ; il faut une variante qui stocke `X=[N,K]` gènes + `centroid=[lignes,K]`.
 - [ ] Câbler baselines manquantes : **SetTransformer random-init gelé** (probe) + **régression linéaire** (skill).
-- [ ] Ablation `skill(E1) vs E2 vs E3` + reporter `(F1, skill)` ensemble.
+- [ ] Ablation `skill(E1=MosaicFM) vs E3(SetTransformer grounded gelé)` + reporter `(F1, skill)` ensemble.
 
 ---
 

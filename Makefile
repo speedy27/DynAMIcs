@@ -44,3 +44,6 @@ pathways: ## Build panel-aligned MSigDB Hallmark membership (real biology progra
 
 smoke_pathways: ## Validate the hallmark-pathways path end-to-end (no downloads)
 	uv run python -m examples.tahoe._smoke_pathways
+
+smoke_perturb_e3: ## Validate the 2-step E3 world-model (frozen grounded SetTransformer) end-to-end
+	uv run python -m examples.tahoe._smoke_perturb_e3

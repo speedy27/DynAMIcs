@@ -18,6 +18,8 @@ loss:
 
 model:
   layers: 1            # predictor (GRU) depth -- JEPA-DNA: predictor depth is the key knob
+  encoder: identity    # "identity" = frozen MosaicFM embeddings (E1) | "settransformer" = E3 (2-step)
+  ground_ckpt: ""      # path to tahoe_ground.pt (required when encoder=settransformer); raw-gene cache
 
 optim:
   epochs: 30
