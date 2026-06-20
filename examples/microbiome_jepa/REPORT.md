@@ -230,9 +230,20 @@ near-constant latent is trivially predictable). Lesson: an isotropic latent is n
 (100ep/50k/d256): linear 0.514/0.891, **MLP 0.526/0.894** (matches the Susagi MLP 0.527/0.890 on acc,
 beats on AUC), fine-tuned upper bound **0.590/0.918** (exceeds Susagi's reported 0.549/0.912). **Caveat
 (no overclaim):** this is SIGReg-100ep/d256 vs the earlier VICReg-**30ep/d128**; a VICReg-100ep/d256 run
-is in flight to isolate SIGReg-vs-VICReg from the longer/bigger-training effect. **Tech-invariance on the
-SIGReg encoder: PENDING.** We fold a SIGReg result into the headline only if the matched-budget
-comparison shows a real improvement; otherwise it stands as this honest SIGReg-vs-VICReg comparison.
+is in flight to isolate SIGReg-vs-VICReg from the longer/bigger-training effect.
+
+**Tech-invariance — SIGReg negative (measured).** amplicon-vs-WGS recoverability (lower=more invariant):
+SIGReg **0.967** > VICReg 0.952 > raw 0.938 > random 0.923 > Susagi imposter 0.891; biome (keeps biology)
+SIGReg 0.869 (best). So SIGReg encodes the protocol signal *even more* than VICReg — isotropy does not buy
+invariance (a JEPA only drops a nuisance its augmentations/losses span). Susagi's identity-only imposter
+rep remains the most tech-invariant.
+
+**Verdict so far: 2 of 3 legs negative (M3, tech); M2 promising but unattributed.** SIGReg makes the latent
+isotropic but that did not fix planning geometry, did not improve tech-invariance, and its M2 gain may be
+the longer/bigger budget rather than the loss (matched VICReg-100ep/d256 pending). We fold SIGReg into the
+headline only if the matched-budget M2 comparison shows a real improvement; otherwise it stays as this
+honest SIGReg-vs-VICReg comparison (a measured "the obvious representation upgrade did not crack the
+bottlenecks" — itself a useful negative).
 
 ## Reproducibility
 - One command (GPU): `cd $WORK/eb_jepa && sbatch examples/microbiome_jepa/run_glv_final.sh`
